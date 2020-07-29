@@ -14,11 +14,12 @@ def read_txt(txt_path):
     return txt_data
 
 class CovidCTDataset(Dataset):
-    def __init__(self, root_dir, classes, covid_files, non_covid_files, transform=None):
+    def __init__(self, root_dir, classes, covid_files, non_covid_files, transform=None,num_slices=30):
         self.root_dir = root_dir
         self.classes = classes
         self.files_path = [non_covid_files, covid_files]
         self.image_list = []
+        self.num_slices = num_slices
 
         # read the files from data split text files
         covid_files = read_txt(covid_files)
@@ -42,14 +43,25 @@ class CovidCTDataset(Dataset):
 
         # Read nii.gz
         image = nib.load(path)
+
         #numpy array
         image = image.get_fdata()
-       
-        # print(image.shape)
-        # print(path)
-        # plt.imshow(image)
-        # plt.show()
+        image = np.transpose(image, (2, 0, 1))
 
+        num_slices = image.shape[0]
+        dif = num_slices - self.num_slices
+
+        first_index = int(dif/2)
+        last_index =  int(dif/2)
+        if dif % 2 == 1: 
+            last_index += 1
+
+        image = image[first_index:num_slices-last_index]
+        
+        image = np.transpose(image, (1, 2, 0))
+
+        print(image.shape)
+        
         # Apply transforms
         if self.transform:
             image = self.transform(image)

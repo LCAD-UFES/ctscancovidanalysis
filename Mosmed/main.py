@@ -14,12 +14,14 @@ from torch.utils.tensorboard import SummaryWriter
 import glob
 import shutil
 import numpy as np
-from torchvision.models import vgg19_bn
 import numpy as np
 import seaborn as sns
 from Covid1100_dataset import CovidCTDataset
 from metrics import compute_metrics
 from earlystop import EarlyStopping
+from model_vgg import vgg19_bn
+# from torchvision.models import vgg19_bn
+
 
 #caminho até a pasta onde estão localizadas as imagens
 ROOT_DIR = '/home/pedro/Downloads/'
@@ -32,22 +34,21 @@ log_dir = "~/logs"
 writer = SummaryWriter(log_dir)
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
-
 # ==== Input pre-processing and data augmentation ====
 
 normalize = transforms.Normalize(mean=[0,0,0], std=[1,1,1])
 train_transformer = transforms.Compose([
-    # transforms.Resize(256),  
+    # transforms.Resize(30),  
     # transforms.RandomResizedCrop((224),scale=(0.5,1.0)),
     # transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    normalize
+    # normalize
 ])
 
 val_transformer = transforms.Compose([
     # transforms.Resize((224,224)),
     transforms.ToTensor(),
-    normalize
+    # normalize
 ])
 
 batchsize = 8
@@ -57,11 +58,13 @@ trainset = CovidCTDataset(root_dir=ROOT_DIR,
                           covid_files='Data-split/CT_COVID/trainCT_COVID.txt',
                           non_covid_files='Data-split/CT_NonCOVID/trainCT_NonCOVID.txt',
                           transform= train_transformer)
+                          
 valset = CovidCTDataset(root_dir=ROOT_DIR,
                         classes = ['CT_NonCOVID', 'CT_COVID'],
                         covid_files='Data-split/CT_COVID/valCT_COVID.txt',
                         non_covid_files = 'Data-split/CT_NonCOVID/valCT_NonCOVID.txt',
                         transform= val_transformer)
+
 testset = CovidCTDataset(root_dir=ROOT_DIR,
                          classes = ['CT_NonCOVID', 'CT_COVID'],
                          covid_files='Data-split/CT_COVID/testCT_COVID.txt',
@@ -74,7 +77,7 @@ test_loader = DataLoader(testset, batch_size=batchsize, drop_last=False, shuffle
 
 # ==== Define the Model ====
 
-model = vgg19_bn(pretrained=True)
+model = vgg19_bn(pretrained=False,in_channels=30)
 model.classifier[6] = nn.Linear(4096, 2)
 model.to(device)
 
@@ -101,7 +104,7 @@ for epoch in range(EPOCHS):
     train_correct = 0
     
     for iter_num, data in enumerate(train_loader):
-        image, target = data['img'].to(device), data['label'].to(device)     
+        image, target = data['img'].to(device,dtype=torch.float), data['label'].to(device)     
 
         # Compute the loss
         output = model(image)
@@ -165,23 +168,23 @@ for epoch in range(EPOCHS):
             print('Updating the learning rate to {}'.format(learning_rate))
             early_stopper.reset()
 
-# === Testing Performace ===
+# # === Testing Performace ===
 
-model = torch.load("best_model.pkl" )
+# model = torch.load("best_model.pkl" )
 
-metrics_dict = compute_metrics(model, test_loader, plot_roc_curve = True)
-print('------------------- Test Performance --------------------------------------')
-print("Accuracy \t {:.3f}".format(metrics_dict['Accuracy']))
-print("Sensitivity \t {:.3f}".format(metrics_dict['Sensitivity']))
-print("Specificity \t {:.3f}".format(metrics_dict['Specificity']))
-print("Area Under ROC \t {:.3f}".format(metrics_dict['Roc_score']))
-print("------------------------------------------------------------------------------")
+# metrics_dict = compute_metrics(model, test_loader, plot_roc_curve = True)
+# print('------------------- Test Performance --------------------------------------')
+# print("Accuracy \t {:.3f}".format(metrics_dict['Accuracy']))
+# print("Sensitivity \t {:.3f}".format(metrics_dict['Sensitivity']))
+# print("Specificity \t {:.3f}".format(metrics_dict['Specificity']))
+# print("Area Under ROC \t {:.3f}".format(metrics_dict['Roc_score']))
+# print("------------------------------------------------------------------------------")
 
-conf_matrix = metrics_dict["Confusion Matrix"]
-ax= plt.subplot()
-sns.heatmap(conf_matrix, annot=True, ax = ax, cmap = 'Blues'); #annot=True to annotate cells
+# conf_matrix = metrics_dict["Confusion Matrix"]
+# ax= plt.subplot()
+# sns.heatmap(conf_matrix, annot=True, ax = ax, cmap = 'Blues'); #annot=True to annotate cells
 
-# labels, title and ticks
-ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
-ax.set_title('Confusion Matrix'); 
-ax.xaxis.set_ticklabels(['CoViD', 'NonCoViD']); ax.yaxis.set_ticklabels(['CoViD', 'NonCoViD']);
+# # labels, title and ticks
+# ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
+# ax.set_title('Confusion Matrix'); 
+# ax.xaxis.set_ticklabels(['CoViD', 'NonCoViD']); ax.yaxis.set_ticklabels(['CoViD', 'NonCoViD']);
