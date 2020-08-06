@@ -24,7 +24,7 @@ from model_vgg import vgg19_bn
 
 
 #caminho até a pasta onde estão localizadas as imagens
-ROOT_DIR = '/home/pedro/Downloads/'
+ROOT_DIR = '/dados/pedroangeli'
 #Quantidade de épocas
 EPOCHS = 60
 
@@ -126,7 +126,7 @@ for epoch in range(EPOCHS):
         
     
     # Compute and print the performance metrics
-    metrics_dict = compute_metrics(model, val_loader)
+    metrics_dict = compute_metrics(model, val_loader,device)
     print('------------------ Epoch {} Iteration {}--------------------------------------'.format(epoch,
                                                                                                  iter_num))
     print("Accuracy \t {:.3f}".format(metrics_dict['Accuracy']))
@@ -170,21 +170,21 @@ for epoch in range(EPOCHS):
 
 # # === Testing Performace ===
 
-# model = torch.load("best_model.pkl" )
+model = torch.load("best_model.pkl" )
 
-# metrics_dict = compute_metrics(model, test_loader, plot_roc_curve = True)
-# print('------------------- Test Performance --------------------------------------')
-# print("Accuracy \t {:.3f}".format(metrics_dict['Accuracy']))
-# print("Sensitivity \t {:.3f}".format(metrics_dict['Sensitivity']))
-# print("Specificity \t {:.3f}".format(metrics_dict['Specificity']))
-# print("Area Under ROC \t {:.3f}".format(metrics_dict['Roc_score']))
-# print("------------------------------------------------------------------------------")
+metrics_dict = compute_metrics(model, test_loader, plot_roc_curve = True)
+print('------------------- Test Performance --------------------------------------')
+print("Accuracy \t {:.3f}".format(metrics_dict['Accuracy']))
+print("Sensitivity \t {:.3f}".format(metrics_dict['Sensitivity']))
+print("Specificity \t {:.3f}".format(metrics_dict['Specificity']))
+print("Area Under ROC \t {:.3f}".format(metrics_dict['Roc_score']))
+print("------------------------------------------------------------------------------")
 
-# conf_matrix = metrics_dict["Confusion Matrix"]
-# ax= plt.subplot()
-# sns.heatmap(conf_matrix, annot=True, ax = ax, cmap = 'Blues'); #annot=True to annotate cells
+conf_matrix = metrics_dict["Confusion Matrix"]
+ax= plt.subplot()
+sns.heatmap(conf_matrix, annot=True, ax = ax, cmap = 'Blues'); #annot=True to annotate cells
 
 # # labels, title and ticks
-# ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
-# ax.set_title('Confusion Matrix'); 
-# ax.xaxis.set_ticklabels(['CoViD', 'NonCoViD']); ax.yaxis.set_ticklabels(['CoViD', 'NonCoViD']);
+ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
+ax.set_title('Confusion Matrix'); 
+ax.xaxis.set_ticklabels(['CoViD', 'NonCoViD']); ax.yaxis.set_ticklabels(['CoViD', 'NonCoViD']);

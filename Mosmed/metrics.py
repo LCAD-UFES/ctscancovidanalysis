@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
+from sklearn.metrics import classification_report, roc_auc_score, roc_curve, confusion_matrix
 
-def compute_metrics(model, test_loader, plot_roc_curve = False):
+def compute_metrics(model, test_loader,device = 'cpu', plot_roc_curve = False):
     model.eval()
     
     val_loss = 0
@@ -18,7 +19,7 @@ def compute_metrics(model, test_loader, plot_roc_curve = False):
     for iter_num, data in enumerate(test_loader):
         
         # Convert image data into single channel data
-        image, target = data['img'].to(device), data['label'].to(device)
+        image, target = data['img'].to(device,dtype=torch.float), data['label'].to(device)
         paths = data['paths']
         path_list.extend(paths)
         

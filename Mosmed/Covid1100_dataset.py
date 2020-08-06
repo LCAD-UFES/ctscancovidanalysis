@@ -60,8 +60,8 @@ class CovidCTDataset(Dataset):
         
         image = np.transpose(image, (1, 2, 0))
 
-        print(image.shape)
-        
+        # print(image.shape)
+        # print(path)
         # Apply transforms
         if self.transform:
             image = self.transform(image)
